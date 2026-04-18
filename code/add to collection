@@ -1,0 +1,20 @@
+BEGIN
+
+IF NOT apex_collection.collection_exists('ORDER_CART') THEN
+        apex_collection.create_collection('ORDER_CART');
+    END IF;
+
+    APEX_COLLECTION.ADD_MEMBER(
+        p_collection_name => 'ORDER_CART',
+
+        p_c001 => :P2_PRODUCT,
+        p_c002 => :P2_PRODEUCT_CATEGORY,
+        p_c003 => :P2_BRAND,
+        p_c004 => :P2_ORIGIN,
+        p_c005 => :P2_COLOR,
+        p_c006 => :P2_STOCK_QTY,
+        p_c007 => :P2_QUANTITY,
+        p_c008 => :P2_RATE,
+        p_c009 => :P2_PRICE
+    );
+END;
