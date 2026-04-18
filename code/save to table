@@ -1,0 +1,73 @@
+DECLARE
+    v_order_id NUMBER;
+BEGIN
+    -- ✅ Insert Master
+    INSERT INTO sales_orders (
+        customer_id,
+        order_date,
+        total_amount,
+        created_by,
+        created_on
+    )
+    VALUES (
+        :P1_CUSTOMER,
+        SYSDATE,
+        0,
+        :APP_USER,
+        SYSDATE
+    )
+    RETURNING order_id INTO v_order_id;
+
+    -- ✅ Insert Detail from Collection
+    FOR rec IN (
+        SELECT *
+        FROM apex_collections
+        WHERE collection_name = 'ORDER_CART'
+    ) LOOP
+
+        INSERT INTO sales_order_items (
+            order_id,
+            product_id,
+            category,
+            brand,
+            origin,
+            color,
+            stock_qty,
+            quantity,
+            rate,
+            price,
+            created_by,
+            created_on
+        )
+        VALUES (
+            v_order_id,
+            rec.c001,
+            rec.c002,
+            rec.c003,
+            rec.c004,
+            rec.c005,
+            rec.c006,
+            rec.c007,
+            rec.c008,
+            rec.c009,
+            :APP_USER,
+            SYSDATE
+        );
+
+    END LOOP;
+
+    -- ✅ Update Total Amount
+    UPDATE sales_orders
+    SET total_amount = (
+        SELECT SUM(c009)
+        FROM apex_collections
+        WHERE collection_name = 'ORDER_CART'
+    ),
+    updated_by = :APP_USER,
+    updated_on = SYSDATE
+    WHERE order_id = v_order_id;
+
+    -- ✅ Clear Collection
+    APEX_COLLECTION.DELETE_COLLECTION('ORDER_CART');
+
+END;
